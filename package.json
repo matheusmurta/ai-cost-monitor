@@ -1,0 +1,85 @@
+{
+  "name": "ai-cost-monitor",
+  "displayName": "AI Cost Monitor",
+  "description": "Monitora tokens e custo de ferramentas de IA (Cline, Claude Code) localmente e em tempo real.",
+  "version": "0.1.0",
+  "publisher": "local-dev",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aiCostMonitor.openDashboard",
+        "title": "AI Cost Monitor: Open Dashboard",
+        "category": "AI Cost Monitor",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "aiCostMonitor.refresh",
+        "title": "AI Cost Monitor: Refresh",
+        "category": "AI Cost Monitor"
+      },
+      {
+        "command": "aiCostMonitor.resetStatistics",
+        "title": "AI Cost Monitor: Reset Statistics",
+        "category": "AI Cost Monitor"
+      },
+      {
+        "command": "aiCostMonitor.showDiagnostics",
+        "title": "AI Cost Monitor: Show Diagnostics",
+        "category": "AI Cost Monitor"
+      }
+    ],
+    "configuration": {
+      "title": "AI Cost Monitor",
+      "properties": {
+        "aiCostMonitor.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Ativa/desativa o AI Cost Monitor."
+        },
+        "aiCostMonitor.defaultModel": {
+          "type": "string",
+          "default": "claude-3-5-sonnet",
+          "description": "Modelo usado para precificar eventos do Claude Code quando o modelo não pode ser identificado."
+        },
+        "aiCostMonitor.currency": {
+          "type": "string",
+          "default": "USD",
+          "enum": [
+            "USD"
+          ],
+          "description": "Moeda usada para exibir custos."
+        },
+        "aiCostMonitor.enableDebugLogs": {
+          "type": "boolean",
+          "default": false,
+          "description": "Ativa logs de nível DEBUG no Output Channel 'AI Cost Monitor'."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "package": "vsce package --allow-missing-repository"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.26.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}
