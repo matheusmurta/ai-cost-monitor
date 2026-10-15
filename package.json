@@ -1,85 +1,81 @@
 {
-  "name": "ai-cost-monitor",
-  "displayName": "AI Cost Monitor",
-  "description": "Monitora tokens e custo de ferramentas de IA (Cline, Claude Code) localmente e em tempo real.",
+  "name": "ai-token-observatory",
+  "displayName": "AI Token Observatory",
+  "description": "Local-first observability for AI coding agent token usage and costs (Claude Code, Cline, Roo Code, Kilo Code).",
   "version": "0.1.0",
-  "publisher": "local-dev",
+  "publisher": "ai-token-observatory",
   "license": "MIT",
-  "engines": {
-    "vscode": "^1.85.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onStartupFinished"
-  ],
-  "main": "./out/extension.js",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Visualization", "Other"],
+  "main": "./dist/extension.js",
+  "activationEvents": ["onStartupFinished"],
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "aiTokenObservatory", "title": "AI Token Observatory", "icon": "media/icon.svg" }
+      ]
+    },
+    "views": {
+      "aiTokenObservatory": [
+        { "id": "aiTokenObservatory.nav", "name": "Navigation" }
+      ]
+    },
     "commands": [
-      {
-        "command": "aiCostMonitor.openDashboard",
-        "title": "AI Cost Monitor: Open Dashboard",
-        "category": "AI Cost Monitor",
-        "icon": "$(pulse)"
-      },
-      {
-        "command": "aiCostMonitor.refresh",
-        "title": "AI Cost Monitor: Refresh",
-        "category": "AI Cost Monitor"
-      },
-      {
-        "command": "aiCostMonitor.resetStatistics",
-        "title": "AI Cost Monitor: Reset Statistics",
-        "category": "AI Cost Monitor"
-      },
-      {
-        "command": "aiCostMonitor.showDiagnostics",
-        "title": "AI Cost Monitor: Show Diagnostics",
-        "category": "AI Cost Monitor"
-      }
+      { "command": "aiTokenObservatory.openDashboard", "title": "AI Token Observatory: Open Dashboard", "icon": "$(graph)" },
+      { "command": "aiTokenObservatory.rescan", "title": "AI Token Observatory: Rescan Sources", "icon": "$(search)" },
+      { "command": "aiTokenObservatory.refresh", "title": "AI Token Observatory: Refresh Data", "icon": "$(refresh)" },
+      { "command": "aiTokenObservatory.export", "title": "AI Token Observatory: Export Report" },
+      { "command": "aiTokenObservatory.diagnostics", "title": "AI Token Observatory: Show Diagnostics" }
     ],
+    "menus": {
+      "view/title": [
+        { "command": "aiTokenObservatory.refresh", "when": "view == aiTokenObservatory.nav", "group": "navigation" },
+        { "command": "aiTokenObservatory.openDashboard", "when": "view == aiTokenObservatory.nav", "group": "navigation" }
+      ]
+    },
     "configuration": {
-      "title": "AI Cost Monitor",
+      "title": "AI Token Observatory",
       "properties": {
-        "aiCostMonitor.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Ativa/desativa o AI Cost Monitor."
-        },
-        "aiCostMonitor.defaultModel": {
-          "type": "string",
-          "default": "claude-3-5-sonnet",
-          "description": "Modelo usado para precificar eventos do Claude Code quando o modelo não pode ser identificado."
-        },
-        "aiCostMonitor.currency": {
-          "type": "string",
-          "default": "USD",
-          "enum": [
-            "USD"
-          ],
-          "description": "Moeda usada para exibir custos."
-        },
-        "aiCostMonitor.enableDebugLogs": {
-          "type": "boolean",
-          "default": false,
-          "description": "Ativa logs de nível DEBUG no Output Channel 'AI Cost Monitor'."
-        }
+        "aiTokenObservatory.refreshIntervalSeconds": { "type": "number", "default": 30, "minimum": 5, "description": "Polling interval for incremental sync (fallback to file watchers)." },
+        "aiTokenObservatory.manualSourceFolders": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Fallback folders. Claude Code projects dirs, Cline/Roo globalStorage dirs or ~/.cline/data dirs." },
+        "aiTokenObservatory.showStatusBar": { "type": "boolean", "default": true },
+        "aiTokenObservatory.allowContentPreview": { "type": "boolean", "default": false, "description": "Allow on-demand preview of prompt/response content (never persisted)." },
+        "aiTokenObservatory.brlRate": { "type": "number", "default": 0, "description": "Optional USD->BRL rate. 0 disables BRL." },
+        "aiTokenObservatory.brlRateDate": { "type": "string", "default": "" },
+        "aiTokenObservatory.customPricing": { "type": "object", "default": {}, "description": "Per-model USD per million tokens: { \"model-id\": { \"input\": 3, \"output\": 15, \"cacheRead\": 0.3, \"cacheWrite\": 3.75 } }" }
       }
     }
   },
   "scripts": {
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "build:ext": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --sourcemap",
+    "build:web": "vite build --config webview/vite.config.ts",
+    "build": "npm run build:ext && npm run build:web && node scripts/copy-wasm.js",
+    "typecheck": "tsc --noEmit -p .",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "package": "vsce package --allow-missing-repository"
+    "package": "npm run build && vsce package --no-dependencies --out ai-token-observatory.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/sql.js": "^1.4.9",
     "@types/vscode": "^1.85.0",
-    "@vscode/vsce": "^2.26.0",
-    "typescript": "^5.4.0",
-    "vitest": "^1.6.0"
+    "@vitejs/plugin-react": "^4.3.0",
+    "@vscode/vsce": "^3.1.0",
+    "autoprefixer": "^10.4.19",
+    "esbuild": "^0.23.0",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4",
+    "typescript": "^5.5.0",
+    "vite": "^5.3.0",
+    "vitest": "^2.0.0"
+  },
+  "dependencies": {
+    "echarts": "^5.5.0",
+    "lucide-react": "^0.400.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sql.js": "^1.10.3",
+    "zustand": "^4.5.2"
   }
 }

@@ -1,0 +1,133 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>AI Token Observatory — Guia</title>
+<style>
+@page{size:A4;margin:16mm 15mm}
+body{font-family:"Segoe UI",Arial,sans-serif;font-size:10pt;line-height:1.4;color:#1f2328}
+h1{font-size:20pt;margin:0;color:#0b5cad}h2{font-size:13pt;color:#0b5cad;border-bottom:2px solid #0b5cad;padding-bottom:2px;margin:14px 0 6px}
+h3{font-size:10.5pt;margin:8px 0 3px}.sub{color:#57606a;margin:2px 0 10px}
+table{border-collapse:collapse;width:100%;margin:4px 0 6px;font-size:9pt}th,td{border:1px solid #d0d7de;padding:3px 6px;text-align:left;vertical-align:top}th{background:#eef4fb}
+code,pre{font-family:Consolas,monospace;font-size:8.6pt;background:#f3f5f7}code{padding:0 3px}pre{padding:6px 8px;border-left:3px solid #0b5cad;white-space:pre-wrap;margin:4px 0}
+ul{margin:3px 0;padding-left:18px}li{margin:1px 0}.box{background:#fff8e6;border:1px solid #e9c46a;padding:5px 8px;margin:6px 0}
+.pb{page-break-before:always}
+</style></head><body>
+<h1>AI Token Observatory</h1>
+<p class="sub">Guia do projeto · extensão VS Code open source (MIT) · v0.1.0 · outubro/2026</p>
+
+<h2>1. O que é</h2>
+<p>Extensão local-first que mostra <b>tokens, custos e requests</b> dos agentes de IA usados no VS Code — <b>Claude Code, Cline, Roo Code e Kilo Code</b> — lendo os arquivos que essas ferramentas já gravam no disco. Sem conta, sem telemetria, sem rede.</p>
+<ul>
+<li><b>Para quem:</b> devs que querem saber quanto e onde estão gastando com agentes de IA.</li>
+<li><b>Como:</b> descobre as pastas → lê incrementalmente → indexa num SQLite local → exibe num painel React.</li>
+<li><b>Entrega:</b> arquivo <code>ai-token-observatory.vsix</code> (~818 KB).</li>
+</ul>
+
+<h2>2. Instalação e uso rápido</h2>
+<pre>code --install-extension ai-token-observatory.vsix</pre>
+<ol>
+<li>Recarregue a janela e clique no ícone <b>AI Token Observatory</b> na Activity Bar.</li>
+<li>A primeira sincronização roda sozinha; depois, watchers + polling mantêm o índice atualizado.</li>
+<li>Use os filtros globais (período, ferramenta, provedor, modelo, projeto, sessão). Clicar num gráfico também filtra.</li>
+</ol>
+<table><tr><th>Comando (Ctrl+Shift+P)</th><th>Função</th></tr>
+<tr><td>AI Token Observatory: Open Dashboard</td><td>Abre o painel principal</td></tr>
+<tr><td>AI Token Observatory: Rescan Sources</td><td>Redescobre as pastas das ferramentas</td></tr>
+<tr><td>AI Token Observatory: Refresh Data</td><td>Força sincronização incremental</td></tr>
+<tr><td>AI Token Observatory: Export Report</td><td>Exporta as requests em CSV ou JSON</td></tr>
+<tr><td>AI Token Observatory: Show Diagnostics</td><td>Mostra a saúde das fontes e os erros de leitura</td></tr></table>
+
+<h2>3. Fontes suportadas</h2>
+<table><tr><th>Ferramenta</th><th>Onde lê</th><th>Unidade</th></tr>
+<tr><td>Claude Code</td><td><code>~/.claude/projects/**/*.jsonl</code> ou <code>CLAUDE_CONFIG_DIR</code></td><td>1 mensagem do assistente (dedup <code>message.id:requestId</code>)</td></tr>
+<tr><td>Cline (legado)</td><td><code>globalStorage/saoudrizwan.claude-dev/tasks/*/ui_messages.json</code></td><td>1 <code>api_req_started</code> concluído</td></tr>
+<tr><td>Cline v2</td><td><code>~/.cline/data/sessions/*/*.messages.json</code></td><td>métricas por mensagem</td></tr>
+<tr><td>Roo Code</td><td><code>globalStorage/rooveterinaryinc.roo-cline/tasks</code></td><td>igual ao Cline legado</td></tr>
+<tr><td>Kilo Code</td><td><code>globalStorage/kilocode.kilo-code/tasks</code></td><td>igual ao Cline legado</td></tr></table>
+<p>O <code>globalStorage</code> é procurado em VS Code, Insiders, VSCodium, Cursor e Windsurf. Arquivos de segredo (ex.: <code>secrets.json</code>) <b>nunca</b> são lidos.</p>
+
+<h2>4. Telas do painel</h2>
+<table><tr><th>Tela</th><th>Conteúdo</th></tr>
+<tr><td>Overview</td><td>KPIs com comparação ao período anterior, séries temporais, mix de tokens, top modelos</td></tr>
+<tr><td>Requests</td><td>Tabela ordenável/pesquisável, colunas configuráveis, 50/página; drawer de detalhe</td></tr>
+<tr><td>Sessions</td><td>Lista de sessões e linha do tempo de cada uma</td></tr>
+<tr><td>Projects / Models / Costs</td><td>Agregações por dimensão; custo por base (reportado/estimado/desconhecido)</td></tr>
+<tr><td>Insights</td><td>Anomalias, picos, outliers, eficiência de cache, horário de pico, previsão do mês</td></tr>
+<tr><td>Integrations</td><td>Saúde de cada fonte: arquivos, requests, erros, limitações</td></tr>
+<tr><td>Settings</td><td>Pastas manuais, preços customizados, preview, intervalo de polling</td></tr></table>
+<p>Também há <b>tree view</b> lateral e <b>Status Bar</b> com o custo da sessão ativa.</p>
+<h2 class="pb">5. Arquitetura</h2>
+<pre>Arquivos locais ──► discovery ──► adapters ──► sync (checkpoints) ──► SQLite (sql.js/WASM)
+                                                                        │
+          Webview React ◄── postMessage (bridge) ◄── controller ◄── analytics engine</pre>
+<table><tr><th>Pasta</th><th>Responsabilidade</th></tr>
+<tr><td><code>src/core</code></td><td>Tipos (<code>RawRequest</code>, <code>AIRequest</code>, <code>Adapter</code>), utilitários de FS, provedores</td></tr>
+<tr><td><code>src/discovery</code></td><td>Detecta pastas de cada ferramenta + pastas manuais</td></tr>
+<tr><td><code>src/adapters</code></td><td><code>claudeCode</code>, <code>taskFolder</code> (Cline legado/Roo/Kilo), <code>clineV2</code></td></tr>
+<tr><td><code>src/sync</code></td><td>Leitura incremental, checkpoint por arquivo, status de saúde</td></tr>
+<tr><td><code>src/storage</code></td><td>Índice SQLite no <code>globalStorage</code>, upsert, recuperação de corrupção</td></tr>
+<tr><td><code>src/pricing</code></td><td>Tabela de preços versionada, estimativa, total de tokens</td></tr>
+<tr><td><code>src/analytics</code></td><td>Filtros, agregações, estatística, insights, forecast, payload do painel</td></tr>
+<tr><td><code>src/export</code>, <code>preview</code></td><td>CSV/JSON seguros; preview sob demanda do texto original</td></tr>
+<tr><td><code>src/panel</code>, <code>controller</code>, <code>extension</code></td><td>Webview com CSP+nonce, mensagens, tree view, status bar</td></tr>
+<tr><td><code>webview/</code></td><td>React + Zustand + Tailwind + ECharts, build Vite (IIFE)</td></tr></table>
+
+<h2>6. Regras de dados</h2>
+<h3>Identidade e deduplicação</h3>
+<ul><li>ID: <code>${sourceTool}:${sourceRecordId}</code>, gravado por upsert — ressincronizar nunca duplica.</li>
+<li>Claude Code: várias linhas de streaming da mesma mensagem → vale a <b>última</b>. <code>&lt;synthetic&gt;</code> é ignorado.</li>
+<li>Totais de tarefa/sessão <b>nunca</b> são somados aos registros por request.</li></ul>
+<h3>Leitura incremental</h3>
+<ul><li>Checkpoint guarda tamanho, mtime e offset. JSONL continua do offset; linha final incompleta fica para a próxima rodada.</li>
+<li>Arquivo menor que o offset (truncado/rotacionado) → relê do início e substitui os registros.</li>
+<li>Fontes JSON inteiras (Cline/Roo/Kilo) são relidas e substituídas por arquivo.</li></ul>
+<h3>Custo — 3 bases, nesta ordem</h3>
+<table><tr><th>Base</th><th>Quando</th></tr>
+<tr><td><b>Reportado</b></td><td>A ferramenta gravou o custo (Cline/Roo/Kilo). Zero reportado continua 0.</td></tr>
+<tr><td><b>Estimado</b></td><td>Modelo na tabela <code>v1-2026-01</code> ou em preços customizados. Ollama/LM Studio = 0.</td></tr>
+<tr><td><b>Desconhecido</b></td><td>Sem dado confiável → <code>null</code>. Nunca é inventado.</td></tr></table>
+<div class="box">Uso do Claude Code por assinatura aparece como <b>equivalente em API</b>, não como cobrança real.</div>
+<p><b>Total de tokens</b> = input + output + cache read + cache write + reasoning. Campo ausente = desconhecido (≠ 0).</p>
+<h3>Insights e previsão</h3>
+<ul><li>Anomalias por mediana/MAD com z robusto &gt; 3,5.</li>
+<li>Amostra mínima: 10 requests, 5 sessões, 7 dias.</li>
+<li>Previsão do mês: regressão linear diária com faixa de ±1,96·SE.</li></ul>
+<h2 class="pb">7. Privacidade e segurança</h2>
+<ul><li>Só campos de uso são indexados; <b>prompts e respostas não são armazenados</b>.</li>
+<li>Preview do texto original é opcional (desligado por padrão), lido direto da fonte e só dentro das pastas conhecidas.</li>
+<li>Webview com Content Security Policy restrita e nonce; sem scripts externos.</li>
+<li>Export CSV protege contra injeção de fórmula; caminhos de workspace só saem se solicitado.</li>
+<li>Nenhuma chamada de rede, nenhuma telemetria.</li></ul>
+
+<h2>8. Configurações</h2>
+<table><tr><th>Chave (<code>aiTokenObservatory.*</code>)</th><th>Padrão</th><th>Uso</th></tr>
+<tr><td><code>refreshIntervalSeconds</code></td><td>30</td><td>Intervalo do polling (complementa os file watchers)</td></tr>
+<tr><td><code>manualSourceFolders</code></td><td>[]</td><td>Pastas extras para ler</td></tr>
+<tr><td><code>showStatusBar</code></td><td>true</td><td>Mostra o custo da sessão ativa na Status Bar</td></tr>
+<tr><td><code>allowContentPreview</code></td><td>false</td><td>Permite preview do conteúdo original (nunca persistido)</td></tr>
+<tr><td><code>brlRate</code> / <code>brlRateDate</code></td><td>0 / ""</td><td>Cotação USD→BRL opcional (0 desativa)</td></tr>
+<tr><td><code>customPricing</code></td><td>{}</td><td>USD por milhão de tokens por modelo</td></tr></table>
+<pre>"aiTokenObservatory.customPricing": {
+  "cline-pass/deepseek-v4-pro": { "input": 0.5, "output": 2, "cacheRead": 0.05, "cacheWrite": 0.5 }
+}</pre>
+
+<h2>9. Desenvolvimento</h2>
+<pre>npm install
+npm run typecheck        # tsc --noEmit
+npm test                 # vitest: 23 testes
+npm run build            # dist/extension.js, dist/sql-wasm.wasm, dist/webview/*
+npx @vscode/vsce package --no-dependencies --out ai-token-observatory.vsix</pre>
+<ul><li>F5 abre o Extension Development Host.</li>
+<li><code>scripts/smoke-real.ts</code>: valida contra os dados reais da máquina (somente leitura, índice em memória).</li>
+<li>Testes usam fixtures sintéticas (<code>test/fixtures.ts</code>) — nunca commitar prompts reais.</li></ul>
+<h3>Adicionar uma nova fonte</h3>
+<ol><li>Implementar <code>Adapter</code> (<code>listFiles</code>, <code>parseFile</code>, <code>incremental</code>) retornando <code>RawRequest</code> com <code>null</code> no que a fonte não registra.</li>
+<li>Registrar a detecção em <code>src/discovery/discovery.ts</code> e o mapeamento em <code>src/sync/sync.ts</code>.</li>
+<li>Criar testes com fixtures cobrindo dedup, arquivo parcial e truncamento.</li></ol>
+
+<h2>10. Limitações conhecidas</h2>
+<ul><li>Modelos fora da tabela (ex.: <code>copilot/*</code>, <code>cline-pass/*</code>) ficam com custo desconhecido até receberem preço customizado.</li>
+<li>Tabela de preços estática; precisa de atualização manual.</li>
+<li>Claude Code não registra duração; em Cline/Roo ela é aproximada pela mensagem seguinte.</li>
+<li>Kilo Code validado apenas com fixtures.</li>
+<li>Sem testes de integração dentro do VS Code (<code>@vscode/test-electron</code>).</li>
+<li>Bundle do painel ~1,2 MB (ECharts completo).</li>
+<li>O <code>vsce</code> local está quebrado; empacotar via <code>npx @vscode/vsce</code>.</li></ul>
+</body></html>

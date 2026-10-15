@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" viewBox="0 0 1000 560" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="1000" height="560" rx="12" fill="#1e1e1e"/>
+  <rect width="1000" height="34" rx="12" fill="#2d2d2d"/><rect y="20" width="1000" height="14" fill="#2d2d2d"/>
+  <g fill="#ff5f57"><circle cx="20" cy="17" r="6"/></g><circle cx="40" cy="17" r="6" fill="#febc2e"/><circle cx="60" cy="17" r="6" fill="#28c840"/>
+  <text x="500" y="22" text-anchor="middle" font-size="13" fill="#bbb">AI Token Observatory — Overview</text>
+  <rect x="0" y="34" width="170" height="526" fill="#252526"/>
+  <g font-size="13" fill="#ccc">
+    <rect x="8" y="50" width="154" height="28" rx="5" fill="#0b5cad"/><text x="20" y="69" fill="#fff">Overview</text>
+    <text x="20" y="104">Requests</text><text x="20" y="134">Sessions</text><text x="20" y="164">Projects</text>
+    <text x="20" y="194">Models</text><text x="20" y="224">Costs</text><text x="20" y="254">Insights</text>
+    <text x="20" y="284">Integrations</text><text x="20" y="314">Settings</text>
+  </g>
+  <g font-size="12" fill="#ccc">
+    <rect x="190" y="50" width="790" height="32" rx="6" fill="#2d2d2d"/>
+    <text x="204" y="71">Period: Last 30 days ▾   Tool: All ▾   Provider: All ▾   Model: All ▾   Project: All ▾</text>
+  </g>
+  <g>
+    <rect x="190" y="96" width="185" height="80" rx="8" fill="#2d2d2d"/><rect x="391" y="96" width="185" height="80" rx="8" fill="#2d2d2d"/>
+    <rect x="592" y="96" width="185" height="80" rx="8" fill="#2d2d2d"/><rect x="793" y="96" width="187" height="80" rx="8" fill="#2d2d2d"/>
+    <g font-size="12" fill="#999"><text x="204" y="118">Requests</text><text x="405" y="118">Total tokens</text><text x="606" y="118">Cost (USD)</text><text x="807" y="118">Cache hit</text></g>
+    <g font-size="24" font-weight="700" fill="#fff"><text x="204" y="150">4,180</text><text x="405" y="150">1.59 B</text><text x="606" y="150">$39.89</text><text x="807" y="150">87%</text></g>
+    <g font-size="11" fill="#4ade80"><text x="204" y="167">▲ 12% vs prev.</text><text x="405" y="167">▲ 8%</text></g>
+    <g font-size="11" fill="#f87171"><text x="606" y="167">▲ 21%</text></g><text x="807" y="167" font-size="11" fill="#4ade80">▲ 3 pp</text>
+  </g>
+  <rect x="190" y="190" width="520" height="350" rx="8" fill="#2d2d2d"/>
+  <text x="206" y="214" font-size="13" fill="#ddd">Tokens per day</text>
+  <g stroke="#3a3a3a"><path d="M210 260H690M210 320H690M210 380H690M210 440H690M210 500H690"/></g>
+  <g fill="#0b5cad">
+    <rect x="220" y="430" width="22" height="70"/><rect x="252" y="400" width="22" height="100"/><rect x="284" y="420" width="22" height="80"/>
+    <rect x="316" y="360" width="22" height="140"/><rect x="348" y="380" width="22" height="120"/><rect x="380" y="330" width="22" height="170"/>
+    <rect x="412" y="350" width="22" height="150"/><rect x="444" y="300" width="22" height="200"/><rect x="476" y="320" width="22" height="180"/>
+    <rect x="508" y="270" width="22" height="230"/><rect x="540" y="290" width="22" height="210"/><rect x="572" y="250" width="22" height="250"/>
+  </g>
+  <g fill="#4fd1c5"><rect x="604" y="240" width="22" height="260" opacity="0.5"/><rect x="636" y="225" width="22" height="275" opacity="0.5"/></g>
+  <text x="610" y="232" font-size="10" fill="#4fd1c5">forecast</text>
+  <rect x="726" y="190" width="254" height="170" rx="8" fill="#2d2d2d"/>
+  <text x="742" y="214" font-size="13" fill="#ddd">Token mix</text>
+  <g transform="translate(810,285)" fill="none" stroke-width="22">
+    <circle r="48" stroke="#0b5cad" stroke-dasharray="190 302"/>
+    <circle r="48" stroke="#4fd1c5" stroke-dasharray="70 302" stroke-dashoffset="-190"/>
+    <circle r="48" stroke="#a78bfa" stroke-dasharray="42 302" stroke-dashoffset="-260"/>
+  </g>
+  <g font-size="11" fill="#bbb"><text x="880" y="262">■ cache read</text><text x="880" y="284">■ input</text><text x="880" y="306">■ output</text></g>
+  <rect x="726" y="374" width="254" height="166" rx="8" fill="#2d2d2d"/>
+  <text x="742" y="398" font-size="13" fill="#ddd">Top models</text>
+  <g font-size="11" fill="#bbb"><text x="742" y="424">deepseek-v4.1-flash</text><text x="742" y="454">claude-sonnet-5</text><text x="742" y="484">deepseek-v4-pro</text><text x="742" y="514">kimi-k3</text></g>
+  <g fill="#a78bfa"><rect x="742" y="430" width="220" height="6" rx="3"/><rect x="742" y="460" width="120" height="6" rx="3"/><rect x="742" y="490" width="70" height="6" rx="3"/><rect x="742" y="520" width="30" height="6" rx="3"/></g>
+</svg>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1d3a"/><stop offset="1" stop-color="#0b5cad"/></linearGradient>
+    <linearGradient id="ln" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4fd1c5"/><stop offset="1" stop-color="#a78bfa"/></linearGradient>
+  </defs>
+  <rect width="1200" height="300" rx="18" fill="url(#bg)"/>
+  <g opacity="0.12" stroke="#fff">
+    <path d="M0 75H1200M0 150H1200M0 225H1200"/><path d="M200 0V300M400 0V300M600 0V300M800 0V300M1000 0V300"/>
+  </g>
+  <polyline points="640,230 700,200 760,215 820,160 880,175 940,110 1000,130 1060,70 1120,90" fill="none" stroke="url(#ln)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#4fd1c5"><circle cx="820" cy="160" r="7"/><circle cx="940" cy="110" r="7"/><circle cx="1060" cy="70" r="7"/></g>
+  <g transform="translate(70,95)">
+    <circle cx="45" cy="45" r="42" fill="none" stroke="#4fd1c5" stroke-width="6"/>
+    <circle cx="45" cy="45" r="16" fill="#a78bfa"/>
+    <path d="M45 3V20M45 70V87M3 45H20M70 45H87" stroke="#4fd1c5" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <text x="190" y="140" font-family="Segoe UI, Arial, sans-serif" font-size="48" font-weight="700" fill="#fff">AI Token Observatory</text>
+  <text x="192" y="182" font-family="Segoe UI, Arial, sans-serif" font-size="22" fill="#cfe3ff">Tokens, costs &amp; requests of your AI coding agents — 100% local</text>
+  <text x="192" y="222" font-family="Consolas, monospace" font-size="16" fill="#8fb8ea">Claude Code · Cline · Roo Code · Kilo Code</text>
+</svg>

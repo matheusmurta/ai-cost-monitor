@@ -1,198 +1,164 @@
-# AI Cost Monitor
+<p align="center">
+  <img src="media/banner.png" alt="AI Token Observatory" width="100%">
+</p>
 
-Extensão para VS Code que monitora **localmente e em tempo real** o consumo de
-tokens e o custo de ferramentas de IA usadas localmente. O primeiro release
-suporta **Cline** e **Claude Code**, com arquitetura preparada para novos
-providers (Roo Code, Kilo Code, Cursor, OpenAI, Gemini, Ollama, OpenRouter…).
+<p align="center">
+  <b>See exactly how many tokens — and dollars — your AI coding agents burn.</b><br>
+  Local-first observability for <b>Claude Code</b>, <b>Cline</b>, <b>Roo Code</b> and <b>Kilo Code</b>, right inside VS Code.
+</p>
 
-- **Plug and Play** — sem configuração obrigatória.
-- **100% local** — nenhum dado (prompts, código, tokens, nomes de arquivos) sai
-  da sua máquina. Sem API keys, sem banco externo, sem telemetria, sem `fetch`.
-- **Tempo real** — dashboard e status bar se atualizam sozinhos.
+<p align="center">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.1.0-0b5cad">
+  <img alt="VS Code" src="https://img.shields.io/badge/VS%20Code-%E2%89%A51.85-007ACC?logo=visualstudiocode&logoColor=white">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-23%20passing-brightgreen">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white">
+  <img alt="Privacy" src="https://img.shields.io/badge/telemetry-none-4fd1c5">
+</p>
+
+<p align="center">
+  <a href="#-features">Features</a> •
+  <a href="#-installation">Installation</a> •
+  <a href="#-supported-tools">Supported tools</a> •
+  <a href="#-how-costs-are-calculated">Costs</a> •
+  <a href="#-privacy">Privacy</a> •
+  <a href="#-development">Development</a>
+</p>
 
 ---
 
-## Como executar
+<p align="center">
+  <img src="media/dashboard-preview.png" alt="Dashboard preview" width="90%">
+  <br><sub><i>Illustrative mockup of the Overview page.</i></sub>
+</p>
 
-```bash
-npm install
-npm run compile
+## ✨ Why
+
+AI agents are great — until the bill arrives. Each tool keeps its own logs in its own format, and none of them shows the full picture.
+**AI Token Observatory** reads the files those tools already write to disk, indexes only the usage numbers, and gives you one dashboard for all of them.
+
+- 🔌 **Zero setup** — no API keys, no account, no proxy.
+- 🏠 **100% local** — no network calls, no telemetry.
+- 🎯 **Honest numbers** — unknown values stay unknown; costs are never invented.
+
+## 🚀 Features
+
+| | |
+|---|---|
+| 📊 **Overview** | KPIs with period-over-period comparison, daily series, token mix, top models, monthly forecast |
+| 📋 **Requests** | Sortable / searchable table, configurable columns, detail drawer per request |
+| 🧵 **Sessions** | Session list with per-request timeline |
+| 📁 **Projects · Models · Costs** | Breakdown by any dimension; cost split into reported / estimated / unknown |
+| 💡 **Insights** | Robust anomaly detection (median/MAD), spikes, outlier sessions, cache efficiency, peak hours |
+| 🔌 **Integrations** | Health of every detected source: files, requests, errors, known limitations |
+| 🎛️ **Global filters** | Period, tool, provider, model, project, session — click any chart to drill down |
+| 📤 **Export** | CSV / JSON (formula-injection safe, paths excluded unless requested) |
+| 📍 **Status bar** | Live cost of the active session |
+
+Under the hood: incremental sync (file watchers + polling), per-file checkpoints, deduplication, and recovery from partial or truncated files.
+
+## 📦 Installation
+
+```powershell
+code --install-extension ai-token-observatory.vsix
 ```
 
-Depois, no VS Code:
+Then reload the window and click the **AI Token Observatory** icon in the Activity Bar. The first sync runs automatically.
 
-1. Abra esta pasta como workspace.
-2. Pressione `F5` (launch "Run Extension") — abre uma janela *Extension
-   Development Host*.
-3. Não é preciso abrir um projeto específico: os dados do Cline
-   (`~/.cline/data/sessions`) e do Claude Code (`~/.claude/projects`) são
-   detectados automaticamente no seu diretório HOME.
-4. Rode o comando **AI Cost Monitor: Open Dashboard** (Ctrl+Shift+P).
-
-> Alternativa: gere o `.vsix` e instale-o (`npm run package`, depois
-> `Extensions → ... → Install from VSIX`).
-
----
-
-## Comandos
-
-| Comando | Ação |
+| Command (`Ctrl+Shift+P`) | What it does |
 |---|---|
-| `AI Cost Monitor: Open Dashboard` | Abre o dashboard (custo, tokens, providers, modelos, histórico). |
-| `AI Cost Monitor: Refresh` | Re-escaneia os providers (idempotente). |
-| `AI Cost Monitor: Reset Statistics` | Zera histórico e contadores. |
-| `AI Cost Monitor: Show Diagnostics` | Abre a tela de diagnóstico e o Output Channel. |
+| `AI Token Observatory: Open Dashboard` | Opens the dashboard |
+| `AI Token Observatory: Rescan Sources` | Re-discovers tool folders |
+| `AI Token Observatory: Refresh Data` | Forces an incremental sync |
+| `AI Token Observatory: Export Report` | Exports requests as CSV or JSON |
+| `AI Token Observatory: Show Diagnostics` | Shows source health and read errors |
 
-A **Status Bar** mostra `$(pulse) AI Cost: $X.XX | X tokens` e abre o dashboard
-ao clicar.
+## 🧩 Supported tools
 
----
+| Tool | Where data is read from | Unit of record |
+|---|---|---|
+| **Claude Code** | `~/.claude/projects/**/*.jsonl` (or `CLAUDE_CONFIG_DIR`) | assistant message (dedup by `message.id:requestId`) |
+| **Cline** (legacy) | `globalStorage/saoudrizwan.claude-dev/tasks` | completed `api_req_started` |
+| **Cline** (v2) | `~/.cline/data/sessions/*/*.messages.json` | per-message metrics |
+| **Roo Code** | `globalStorage/rooveterinaryinc.roo-cline/tasks` | completed `api_req_started` |
+| **Kilo Code** | `globalStorage/kilocode.kilo-code/tasks` | completed `api_req_started` |
 
-## Configurações opcionais (`settings.json`)
+`globalStorage` is searched for VS Code, Insiders, VSCodium, Cursor and Windsurf. Extra folders can be added via settings.
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart LR
+  A[Local log files] --> B[Discovery]
+  B --> C[Adapters]
+  C --> D[Incremental sync<br/>checkpoints]
+  D --> E[(SQLite index<br/>sql.js / WASM)]
+  E --> F[Analytics engine]
+  F --> G[Controller]
+  G <-->|postMessage| H[React webview]
+```
+
+## 💰 How costs are calculated
+
+| Priority | Basis | When |
+|---|---|---|
+| 1 | **Reported** | The tool recorded the cost (Cline / Roo / Kilo). A reported `0` stays `0`. |
+| 2 | **Estimated** | Model is in the versioned price table (`v1-2026-01`) or in your `customPricing`. Ollama / LM Studio = `0`. |
+| 3 | **Unknown** | No reliable data — shown as unknown, **never invented**. |
+
+> [!NOTE]
+> Claude Code subscription usage is shown as an **API-equivalent estimate**, not actual billing. Local logs never contain the real billed amount.
+
+**Total tokens** = input + output + cache read + cache write + reasoning (missing fields are unknown, not zero).
+
+## 🔒 Privacy
+
+- Only usage fields are indexed (SQLite in VS Code global storage) — **prompts and responses are never stored**.
+- Optional content preview is **off by default** and reads directly from the source, only inside known folders.
+- Strict Content Security Policy with nonce in the webview; no external scripts.
+- Secret files (e.g. `secrets.json`) are never read. No network calls, no telemetry.
+
+## ⚙️ Settings
+
+| Key (`aiTokenObservatory.*`) | Default | Description |
+|---|---|---|
+| `refreshIntervalSeconds` | `30` | Polling interval (complements file watchers) |
+| `manualSourceFolders` | `[]` | Extra folders to scan |
+| `showStatusBar` | `true` | Show active-session cost in the status bar |
+| `allowContentPreview` | `false` | Allow on-demand preview of original content |
+| `brlRate` / `brlRateDate` | `0` / `""` | Optional USD→BRL rate |
+| `customPricing` | `{}` | USD per million tokens per model |
 
 ```json
-{
-  "aiCostMonitor.enabled": true,
-  "aiCostMonitor.defaultModel": "claude-3-5-sonnet",
-  "aiCostMonitor.currency": "USD",
-  "aiCostMonitor.enableDebugLogs": false
+"aiTokenObservatory.customPricing": {
+  "my-model": { "input": 3, "output": 15, "cacheRead": 0.3, "cacheWrite": 3.75 }
 }
 ```
 
-Nenhuma delas é obrigatória.
+## ⚠️ Limitations
+- Claude Code logs no request duration; Cline/Roo duration is approximated from the next UI message.
+- Cline/Roo model may be inferred from task metadata when not on the request.
+- Kilo Code support is based on the shared Roo/Cline task layout (validated with fixtures only).
+- Pricing table must be updated as vendors change prices; use custom pricing for other models.
 
----
+## 🛠️ Development
 
-## Arquitetura
-
-```
-AI Cost Monitor
-│
-├── Core (não conhece formatos de log)
-│   ├── MonitoringService   — orquestra watchers, debounce, upsert/dedup, agregação.
-│   ├── AggregationService  — agrega UsageRecord em UsageSummary (pura).
-│   ├── CostCalculator      — fórmula de custo (pura).
-│   ├── IncrementalFileReader — leitura por offset (JSONL grandes).
-│   ├── PersistenceService  — globalState (histórico entre reinícios).
-│   ├── Logger              — Output Channel "AI Cost Monitor" (DEBUG..ERROR).
-│   ├── DiagnosticsState    — estado observável para a tela de diagnóstico.
-│   ├── dedup / format / value-utils / fs-walk / emitter
-│
-├── Providers (adapters isolados)
-│   ├── ai-provider.ts      — interface AIProvider (+ IncrementalProvider).
-│   ├── provider-registry.ts
-│   ├── cline/              — cline-parser.ts, cline-provider.ts
-│   └── claude-code/        — claude-code-parser.ts, pricing.ts, provider
-│
-├── Models
-│   ├── usage-record.ts     — modelo unificado (UsageRecord, ModelPricing)
-│   └── usage-summary.ts    — agregações (UsageSummary)
-│
-└── UI
-    ├── dashboard-panel.ts      — Webview do dashboard
-    ├── diagnostics-panel.ts    — Webview de diagnóstico
-    └── webview-content.ts      — HTML/CSS/JS (embed + nonce/CSP)
+```powershell
+npm install
+npm run typecheck        # tsc --noEmit
+npm test                 # vitest
+npm run build            # dist/extension.js, dist/sql-wasm.wasm, dist/webview/*
+npx @vscode/vsce package --no-dependencies --out ai-token-observatory.vsix
 ```
 
-### Fluxo de dados
+Press <kbd>F5</kbd> to launch the Extension Development Host.
 
-```
-Watcher (create/change/delete) → debounce (150ms) → provider.parseFile/parseChunk
-  → parser (puro) → UsageRecord[] → upsert/dedup → AggregationService
-  → Persistence (globalState) → Emitter → StatusBar + Dashboard
-```
+**Tech stack:** TypeScript · esbuild · sql.js (WASM) · React 18 · Zustand · Tailwind CSS · ECharts · Vite · Vitest
 
-### Adicionar um novo provider
+## 🤝 Contributing
 
-Basta implementar `AIProvider` (e, opcionalmente, `IncrementalProvider`) e
-registrá-lo no `ProviderRegistry` no `extension.ts`. **Nenhuma alteração no
-core é necessária.**
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) — including how to add a new source adapter. Changes are tracked in [CHANGELOG.md](CHANGELOG.md).
 
----
+## 📄 License
 
-## Deduplicação / idempotência
-
-Cada registro recebe um ID determinístico, mas a estratégia varia conforme o
-tipo de dado:
-
-- **Claude Code (eventos append-only)** — cada linha é um evento único; o ID é
-  o hash do conteúdo (`provider | sourceFile | timestamp | tokens | custo | modelo`).
-  Reprocessar o mesmo evento produz o mesmo ID e nada é duplicado.
-- **Cline (resumo de sessão que cresce)** — cada sessão gera 1 registro com ID
-  estável (`provider | sourceFile | session_id`). O `AggregationService` faz
-  **upsert**: quando o mesmo ID chega com conteúdo diferente (custo/tokens
-  maiores), ele **substitui** o registro anterior em vez de duplicar.
-
-Ambas ficam idempotentes entre reinícios, pois os IDs persistem com os
-registros. Limitação conhecida: um arquivo parcialmente escrito pode mudar de
-valor até a escrita final — mitigado pelo debounce de 150ms e pelo descarte de
-registros incompletos (tokens indefinidos).
-
----
-
-## Cálculo de custo
-
-```
-inputCost  = inputTokens  / 1_000_000 * inputPerMillionTokens
-outputCost = outputTokens / 1_000_000 * outputPerMillionTokens
-totalCost  = inputCost + outputCost (+ cache, quando disponível, separadamente)
-```
-
-- Cline: o custo vem do campo `totalCost` do resumo de sessão (já calculado
-  pelo próprio Cline, sem pricing local).
-- Claude Code: o custo é calculado a partir da tabela central
-  `src/providers/claude-code/pricing.ts`. Quando o modelo não é identificado,
-  usa-se o `defaultModel` e o registro é marcado como `inferredModel: true`.
-
-> **Importante:** os valores em `pricing.ts` são provisórios e devem ser
-> revisados contra os preços oficiais da Anthropic antes de uso em produção.
-
----
-
-## Persistência
-
-MVP usa `ExtensionContext.globalState` (local, serializado em JSON, com o
-lifecycle do VS Code). O histórico é limitado a `MAX_PERSISTED_RECORDS`
-(20.000), mantendo os registros mais recentes.
-
----
-
-## Testes
-
-```bash
-npm test
-```
-
-Cobre: parser Cline (formato legado `api_req_res` e resumo de sessão v3), parser
-Claude Code, calculadora de custo, deduplicação/upsert e agregação (36 testes).
-
----
-
-## Gerar o `.vsix`
-
-```bash
-npm install -g @vscode/vsce # opcional; já está como devDependency
-npm run package
-```
-
-O pacote `ai-cost-monitor-0.1.0.vsix` é gerado na raiz. Para instalar:
-`code --install-extension ai-cost-monitor-0.1.0.vsix`.
-
----
-
-## Hipóteses e limitações (documentadas)
-
-- Os dados são lidos do **diretório HOME** (não do workspace): Cline em
-  `~/.cline/data/sessions/**/<id>.json` e Claude Code em
-  `~/.claude/projects/**/*.jsonl`.
-- Os formatos internos do Cline e do Claude Code podem mudar; os parsers ficam
-  isolados e tratam campos opcionais defensivamente.
-- Para o Cline usamos o **resumo por sessão** (`<id>.json`); os arquivos
-  `<id>.messages.json` (conversa completa) e `<id>.compaction.json` são
-  ignorados por serem grandes e redundantes.
-- Para o Cline, `metadata.usage.inputTokens` já inclui os tokens de cache; o
-  total exibido é a soma reportada pelo próprio Cline (não recalculamos custo).
-- `sourceFile` armazena o **basename** do arquivo (MVP).
-- A leitura incremental usa `fs` do Node (premissa *local first*); workspaces
-  remotos/virtuais estão fora do escopo do MVP.
-- Ao remover um arquivo monitorado, o histórico já contabilizado é **mantido**.
+[MIT](LICENSE) © AI Token Observatory contributors

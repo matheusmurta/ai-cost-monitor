@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; }
+body { @apply bg-bg text-slate-200 font-sans antialiased; margin: 0; padding: 0; font-size: 13px; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #1E2B42; border-radius: 6px; }
+.card { @apply bg-panel border border-line rounded-xl shadow-card; }
+.btn { @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-line bg-panel2 text-slate-200 hover:border-blue/60 hover:bg-[#13213a] transition-colors disabled:opacity-50; }
+.btn-primary { @apply bg-blue border-blue text-white hover:bg-blue-glow; }
+.chip { @apply px-2.5 py-1 rounded-md text-xs text-muted hover:text-slate-100 hover:bg-[#16243c] transition-colors; }
+.chip-on { @apply bg-blue/20 text-blue-glow; }
+.input { @apply bg-panel2 border border-line rounded-lg px-2.5 py-1.5 text-slate-200 outline-none focus:border-blue/70; }
+.skeleton { @apply animate-pulse bg-[#16243c] rounded; }
+.fade-in { animation: fade .25s ease-out; }
+@keyframes fade { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+th { @apply text-left font-medium text-muted text-xs uppercase tracking-wide; }
